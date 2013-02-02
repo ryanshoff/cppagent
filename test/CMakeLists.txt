@@ -71,3 +71,8 @@ include_directories(${LibXML2_INCLUDE_DIRS} ${CPPUNIT_INCLUDE_DIR})
 
 add_executable(test ${test_srcs} ${test_headers})
 target_link_libraries(test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
+
+if(WIN32)
+  target_link_libraries(test psapi)
+endif(WIN32)
+

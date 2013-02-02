@@ -20,10 +20,8 @@
 #include "globals.hpp"
 #include <time.h>
 #include <stdio.h>
-#if 0
 #ifdef _WINDOWS
 #include <psapi.h>
-#endif
 #endif
 
 using namespace std;
@@ -292,7 +290,7 @@ bool isMTConnectUrn(const char *aUrn)
   return strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27) == 0;
 }
 
-#if 0
+
 long getMemorySize()
 {
   long size = 0;
@@ -312,4 +310,3 @@ long getMemorySize()
   
   return size;
 }
-#endif

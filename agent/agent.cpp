@@ -15,7 +15,7 @@
  */
 
 #include "agent.hpp"
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sstream>
@@ -193,6 +193,14 @@ void Agent::start()
     sLogger << LFATAL << "Cannot start server: " << e.what();
     exit(1);
   }
+  
+  // Start stats thread TODO: This should probably be conditional
+  threaded_object::start();
+}
+
+void Agent::thread()
+{
+  
 }
 
 void Agent::clear()

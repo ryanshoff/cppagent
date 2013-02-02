@@ -45,7 +45,7 @@ using namespace dlib;
 
 typedef std::vector<std::pair<std::string, std::string> > AssetChangeList;
 
-class Agent : public server::http_1a
+class Agent : public server::http_1a, public threaded_object
 {
   class ParameterError
   {
@@ -270,6 +270,9 @@ protected:
   /* Find data items by name/id */
   DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
   
+  // Statistics thread to resize buffer dynamically
+  virtual void thread();
+  
 protected:
   /* Unique id based on the time of creation */
   unsigned int mInstanceId;
@@ -320,6 +323,9 @@ protected:
   
   // For debugging
   bool mLogStreamData;
+  
+  // Statistics
+  
 };
 
 #endif

@@ -90,6 +90,7 @@ add_executable(agent ${agent_srcs} ${agent_headers})
 target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
+  target_link_libraries(agent psapi)
   foreach(flag_var
           CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
           CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
