@@ -198,9 +198,27 @@ void Agent::start()
   threaded_object::start();
 }
 
+// This thread will take collect rolling stats on the event arrival rate and then
+// check if we have adequate storage to retain a certain amount of time in backlog.
+// We have two other constraints, a maximum size and a memory limit, if either is
+// exceeded, then we will need to back off.
+//
+// If the agent cannot expand, then just log the stats.
 void Agent::thread()
 {
+  uint64_t window_start = getCurrentTimeInMicros();
+  uint64_t seq_start = mSequence;
   
+  int window = 20 * 1000;
+  
+  while (true) {
+    uint64_t now = getCurrentTimeInMicros();
+    uint64_t delta = mSequence - seq_start;
+    
+    if ((now - window_start) > window) {
+      
+    }
+  }
 }
 
 void Agent::clear()
