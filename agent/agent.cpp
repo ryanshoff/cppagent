@@ -215,10 +215,70 @@ void Agent::thread()
     uint64_t now = getCurrentTimeInMicros();
     uint64_t delta = mSequence - seq_start;
     
-    if ((now - window_start) > window) {
-      
+    // Collect the number of events in the current time window less some
+    // slop, because we don't want to wait to until the buffer is exhausted.
+    sLogger << LDEBUG << "Events in window" << delta;
+    
+    if (delta > mSlidingBufferSize) {
+      growBuffer();
+    }
+    
+    if ((now - window_start) >= window) {
+      seq_start = mSequence;
+      window_start = now;
+    }
+    
+    dlib::sleep(1000);
+  }
+}
+
+// Expand the sliding buffer size and the checkpoints.
+void Agent::growBuffer()
+{
+  dlib::auto_mutex lock(*mSequenceLock);
+
+  unsigned int new_size = mSlidingBuffer->size() + 1;
+  sliding_buffer_kernel_1<ComponentEventPtr> *new_buffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
+  
+  // Create the new set of checkpoints. Since we're rewriting the circular buffer,
+  // we need to make sure the checkpoints are also placed correctly along the way.
+  unsigned int new_checkpoint_count = (new_size / mCheckpointFreq) + 1;
+  Checkpoint *new_checkpoints = new Checkpoint[new_checkpoint_count];
+  
+  // To build the new buffer, we'll have to start at the beginning of the
+  // new buffer and compute the indexes correctly. The old circular buffer starts at
+  // the previous index of the first sequence number. We subtract one because the
+  // new buffer will begin indexing from one.
+  unsigned long offset = mSlidingBuffer->get_element_id(getFirstSequence()) - 1;
+  new_buffer->set_size(new_size);
+  unsigned long limit = mSequence > mSlidingBufferSize ? mSlidingBufferSize : mSequence;
+  Checkpoint cpk(mFirst);
+  
+  // this will not work since the sequence number is the new index to the array and we are only
+  // extending the mask by one bit. This means that the new index will be the same until we hit
+  // the end and then instead of scrolling off the end. After that we'll index to the end of the
+  // 
+  for (unsigned long i = 1; i <= limit; i++) {
+    ComponentEvent *event = (*mSlidingBuffer)[i + offset];
+    (*new_buffer)[i] = event;
+    cpk.addComponentEvent(event);
+    if (new_checkpoint_count > 0 && i % mCheckpointFreq == 0) {
+      // Copy the checkpoint from the current into the slot
+      new_checkpoints[i / mCheckpointFreq].copy(cpk);
     }
   }
+  
+  // set the new sizes
+  mSlidingBufferSize = 1 << new_size;
+  mCheckpointCount = new_checkpoint_count;
+  
+  // Clean up the old buffers
+  delete mSlidingBuffer;
+  mSlidingBuffer = new_buffer;
+
+  // Clean up the old checkpoints
+  delete[] mCheckpoints;
+  mCheckpoints = new_checkpoints;
 }
 
 void Agent::clear()
@@ -241,7 +301,6 @@ void Agent::clear()
   }
   
   mAdapters.clear();
-
 }
 
 // Register a file
@@ -1226,8 +1285,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
   {
     dlib::auto_mutex lock(*mSequenceLock);
     
-    firstSeq = (mSequence > mSlidingBufferSize) ?
-                        mSequence - mSlidingBufferSize : 1;
+    firstSeq = getFirstSequence();
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;

@@ -183,7 +183,7 @@ public:
   
   // Update DOM when key changes
   void updateDom(Device *aDevice);
-  
+    
 protected:
   /* HTTP methods to handle the 3 basic calls */
   std::string handleCall(std::ostream& out,
@@ -272,6 +272,7 @@ protected:
   
   // Statistics thread to resize buffer dynamically
   virtual void thread();
+  void growBuffer();
   
 protected:
   /* Unique id based on the time of creation */
