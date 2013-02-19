@@ -20,7 +20,8 @@ if(WIN32)
         string(REGEX REPLACE "32" "64" ${flag_var} "${${flag_var}}")
       endif(${flag_var} MATCHES "WIN32")
     endforeach(flag_var)
-          
+    
+    string(REGEX REPLACE "WIN32" "WIN64" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2_64.lib)
     file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2_64d.lib)
   else(CMAKE_CL_64)
